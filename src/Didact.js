@@ -27,23 +27,41 @@ function createTextElement(text) {
 	}
 }
 
+function commitRoot () {
+	commitWork(wipRoot.child)
+	wipRoot = null
+}
+
+function commitWork (fiber) {
+	if (!fiber) return
+	const domParent = fiber.parent.dom
+	domParent.appendChild(fiber.dom)
+	commitWork(fiber.child)
+	commitWork(fiber.sibling)
+}
+
 // 渲染函数
 function render(element, container) {
-	nextUnitOfWork = {
+	wipRoot = {
 		dom: container,
 		props: {
 			children: [element],
 		},
 	}
+	nextUnitOfWork = wipRoot
 }
 
 let nextUnitOfWork = null
+let wipRoot = null
 
 function workLoop(deadline) {
 	let shouldYield = false
 	while (nextUnitOfWork && !shouldYield) {
 		nextUnitOfWork = performUnitOfWork(nextUnitOfWork)
 		shouldYield = deadline.timeRemaining() < 1
+	}
+	if (!nextUnitOfWork && wipRoot){
+		commitRoot()
 	}
 	// 申请下个时间切片
 	requestIdleCallback(workLoop)
@@ -54,12 +72,8 @@ requestIdleCallback(workLoop)
 
 function performUnitOfWork(fiber) {
 	console.log('fiber',fiber);
-	debugger
 	if (!fiber.dom) {
 		fiber.dom = createDom(fiber)
-	}
-	if (fiber.parent) {
-		fiber.parent.dom.appendChild(fiber.dom)
 	}
 	const elements = fiber.props.children
 	let index = 0
