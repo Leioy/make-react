@@ -2,7 +2,12 @@
 import { Didact } from './Didact'
 const container = document.getElementById('root')
 
-function App (props) {
-	return <h1 id="foo">hi {props.name}</h1>
+function Counter() {
+	const [count, setCount] = Didact.useState(0)
+	return (	
+		<div>
+			<button onClick={() => setCount((c) => c + 1)}>Count: {count}</button>
+		</div>
+	)
 }
-Didact.render(<App name="foo" />,container)
+Didact.render(<Counter />, container)
